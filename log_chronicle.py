@@ -31,6 +31,7 @@ This module provides a simple extension to the Python logging module:
 - JSON log output
 """
 
+from copy import deepcopy
 import datetime
 import inspect
 import json
@@ -46,7 +47,7 @@ class LogChronicle:
         self._priv_str = 'private'
         self._bind_dict = {}
         self._priv_list = []
-        self._orig_log = logging.getLogger(log_name)
+        self._orig_log = deepcopy(logging.getLogger(log_name))
         self._orig_log.setLevel(logging.WARNING)
         handler = logging.handlers.SysLogHandler(address='/dev/log')
         self._orig_log.addHandler(handler)
@@ -106,7 +107,7 @@ class LogChronicle:
 
     def _add_metadata(self, loglevel, args, kwargs):
         """ Automatically add time, file and line number to log data """
-        temp_bind_dict = self._bind_dict
+        temp_bind_dict = deepcopy(self._bind_dict)
         # Format UTC timestamp in ISO 8601 format
         temp_bind_dict['timestamp'] = (
             datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -131,10 +132,9 @@ class LogChronicle:
             temp_bind_dict[self._priv_str] = self._priv_list
 
         # Turn into JSON
-        temp_bind_dict = json.dumps(temp_bind_dict, encoding='utf-8',
+        json_bind_dict = json.dumps(temp_bind_dict, encoding='utf-8',
                                     ensure_ascii=False)
-
-        return temp_bind_dict
+        return json_bind_dict
 
 
 LOG = LogChronicle()
